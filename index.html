@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NasriSHOP - المتجر الاحترافي المتكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f4f4f5; }
+        .temu-btn { background-color: #FF5000; transition: transform 0.1s ease, background-color 0.2s; }
+        .temu-btn:hover { background-color: #e04400; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="pb-12 text-gray-800">
+
+    <!-- الهيدر الرئيسي -->
+    <header class="sticky top-0 z-40 bg-[#FF5000] text-white shadow-lg">
+        <div class="bg-black/15 text-xs py-1.5 text-center font-bold">
+            🔥 شحن سريع لجميع الولايات (58 ولاية) | الدفع عند الاستلام مع معاينة المنتج 🤝
+        </div>
+        
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <h1 class="text-2xl md:text-3xl font-black tracking-tight cursor-pointer" onclick="switchTab('store')">
+                Nasri<span class="text-yellow-300">SHOP</span>
+            </h1>
+            
+            <div class="flex-1 max-w-lg relative">
+                <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="ابحث عن منتج..." class="w-full py-2 px-4 pr-10 rounded-full text-gray-800 text-sm focus:outline-none shadow-inner">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+            </div>
+
+            <button onclick="openPassModal()" class="bg-black/20 hover:bg-black/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                <i class="fa-solid fa-lock"></i> <span>لوحة التحكم</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- واجهة المتجر للزبائن -->
+    <div id="store-view">
+        <main class="container mx-auto px-4 mt-6">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-800">
+                <i class="fa-solid fa-fire text-[#FF5000]"></i> المنتجات المتاحة
+            </h3>
+            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4"></div>
+        </main>
+    </div>
+
+    <!-- واجهة لوحة التحكم -->
+    <div id="admin-view" class="container mx-auto px-4 py-6 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">🛠️ لوحة إدارة NasriSHOP</h2>
+            <div class="flex gap-2">
+                <button onclick="exportOrdersCSV()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-700">📊 تصدير لـ Excel</button>
+                <button onclick="switchTab('store')" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold">العودة للمتجر 🛒</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="space-y-6">
+                <!-- استمارة الإضافة والتعديل -->
+                <div class="bg-white p-5 rounded-2xl border card-shadow h-fit">
+                    <h3 id="form-title" class="text-lg font-bold mb-4 text-[#FF5000] border-b pb-2">➕ إضافة منتج جديد</h3>
+                    <form id="addProductForm" onsubmit="handleProductSubmit(event)" class="space-y-3">
+                        <input type="hidden" id="p-id">
+                        <input type="text" id="p-title" required placeholder="اسم المنتج" class="w-full p-2 border rounded-lg text-sm">
+                        <select id="p-category" required class="w-full p-2 border rounded-lg text-sm">
+                            <option value="electronics">إلكترونيات</option>
+                            <option value="fashion">أزياء</option>
+                            <option value="home">المنزل</option>
+                        </select>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="p-price" required placeholder="السعر (د.ج)" class="p-2 border rounded-lg text-sm">
+                            <input type="number" id="p-old-price" placeholder="السعر القديم" class="p-2 border rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-gray-500 mb-1">صورة المنتج:</label>
+                            <input type="file" id="p-file" accept="image/*" class="w-full p-1 border rounded-lg text-xs bg-gray-50">
+                        </div>
+                        <input type="text" id="p-badge" placeholder="الشارة (مثل: تخفيض)" class="w-full p-2 border rounded-lg text-sm">
+                        <textarea id="p-html-desc" rows="3" placeholder="الوصف الكامل" class="w-full p-2 border rounded-lg text-sm"></textarea>
+                        
+                        <div class="flex gap-2">
+                            <button type="submit" id="submit-btn" class="flex-1 temu-btn text-white py-2.5 rounded-xl font-bold text-sm">نشر المنتج 🚀</button>
+                            <button type="button" id="cancel-edit-btn" onclick="resetForm()" class="hidden bg-gray-500 text-white px-3 py-2.5 rounded-xl font-bold text-sm">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- إعدادات أسعار التوصيل للولايات -->
+                <div class="bg-white p-5 rounded-2xl border card-shadow space-y-4">
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-truck text-[#FF5000]"></i> إعدادات أسعار التوصيل
+                    </h3>
+
+                    <div class="bg-gray-50 p-3 rounded-xl border space-y-2">
+                        <span class="block text-xs font-bold text-gray-700">⚡ تعيين سعر موحد لجميع الولايات:</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="global-home" placeholder="للمنزل (د.ج)" class="p-2 border rounded-lg text-xs">
+                            <input type="number" id="global-desk" placeholder="للمكتب (د.ج)" class="p-2 border rounded-lg text-xs">
+                        </div>
+                        <button onclick="applyGlobalShipping()" class="w-full bg-orange-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-orange-700">تطبيق على 58 ولاية 🌐</button>
+                    </div>
+
+                    <div class="space-y-2 pt-1">
+                        <span class="block text-xs font-bold text-gray-700">🎯 أو تخصيص سعر لولاية محددة:</span>
+                        <select id="admin-shipping-wilaya" onchange="loadWilayaShippingRates()" class="w-full p-2 border rounded-lg text-xs bg-white"></select>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">منزل (د.ج)</label>
+                                <input type="number" id="rate-home" class="w-full p-2 border rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">مكتب (د.ج)</label>
+                                <input type="number" id="rate-desk" class="w-full p-2 border rounded-lg text-xs">
+                            </div>
+                        </div>
+                        <button onclick="saveShippingRates()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-xs hover:bg-blue-700">حفظ سعر الولاية 💾</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قائمة إدارة المنتجات والطلبات -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white p-5 rounded-2xl border card-shadow">
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4">🛍️ إدارة المنتجات الحالية</h3>
+                    <div id="admin-products-list" class="divide-y max-h-60 overflow-y-auto"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border card-shadow">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b pb-3 gap-3 mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">📦 الطلبات (<span id="orders-count">0</span>)</h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-100 text-gray-700 font-bold">
+                                <tr>
+                                    <th class="p-2">#</th>
+                                    <th class="p-2">الزبون</th>
+                                    <th class="p-2">الهاتف</th>
+                                    <th class="p-2">الولاية - البلدية</th>
+                                    <th class="p-2">التوصيل</th>
+                                    <th class="p-2">المجموع</th>
+                                    <th class="p-2">التاريخ والتوقيت</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <tr><td colspan="7" class="text-center py-4 text-gray-400">جاري تحميل الطلبات...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة دخول الإدارة بكلمة مرور مخفية -->
+    <div id="pass-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative card-shadow text-center space-y-4">
+            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-user-shield text-[#FF5000]"></i> تسجيل دخول الإدارة</h3>
+            <input type="password" id="admin-pass-input" placeholder="أدخل كلمة المرور" class="w-full p-2.5 border rounded-xl text-center text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#FF5000]">
+            <div class="flex gap-2">
+                <button onclick="checkAdminPass()" class="flex-1 temu-btn text-white py-2 rounded-xl text-sm font-bold">دخول</button>
+                <button onclick="closePassModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الشراء الشفافة (Modal) -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+            <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-500 text-xl font-bold">&times;</button>
+            <div id="modal-product-details" class="mb-4 border-b pb-4"></div>
+            <h3 class="text-md font-bold text-[#FF5000] mb-3"><i class="fa-solid fa-truck-fast"></i> استمارة الطلب (الدفع عند الاستلام)</h3>
+            <form onsubmit="handleOrderSubmit(event)" class="space-y-3">
+                <input type="text" id="cust-name" required placeholder="الاسم الكامل" class="w-full p-2.5 border rounded-lg text-sm">
+                <input type="tel" id="cust-phone" required placeholder="رقم الهاتف (06/07/05)" class="w-full p-2.5 border rounded-lg text-sm">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">الولاية</label>
+                        <select id="cust-wilaya" onchange="onWilayaChange()" required class="w-full p-2.5 border rounded-lg text-sm bg-white font-medium"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600 mb-1">البلدية</label>
+                        <select id="cust-commune" required class="w-full p-2.5 border rounded-lg text-sm bg-white font-medium">
+                            <option value="">اختر البلدية...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 text-xs font-semibold pt-1">
+                    <label class="flex-1 border p-2.5 rounded-lg text-center cursor-pointer flex items-center justify-center gap-1">
+                        <input type="radio" name="modal_ship" value="home" checked onchange="updateShippingPrices()"> للمنزل 🏠
+                    </label>
+                    <label class="flex-1 border p-2.5 rounded-lg text-center cursor-pointer flex items-center justify-center gap-1">
+                        <input type="radio" name="modal_ship" value="desk" onchange="updateShippingPrices()"> للمكتب 🏢
+                    </label>
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-xl text-sm space-y-1.5 border">
+                    <div class="flex justify-between text-gray-600"><span>سعر المنتج:</span><span id="modal-prod-price" class="font-bold">0 د.ج</span></div>
+                    <div class="flex justify-between text-gray-600"><span>التوصيل:</span><span id="modal-ship-price" class="font-bold">0 د.ج</span></div>
+                    <hr>
+                    <div class="flex justify-between font-black text-lg text-[#FF5000]"><span>المجموع الكلي:</span><span id="modal-total-price">0 د.ج</span></div>
+                </div>
+                <button type="submit" class="w-full temu-btn text-white py-3.5 rounded-xl font-bold text-base shadow-md">تأكيد الطلب الآن ⚡</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- البرمجة التفاعلية -->
+    <script>
+        const API_URL = "/api";
+        let algeriaData = {};
+        let defaultRates = { home: 600, desk: 400 };
+        let dbShippingRates = JSON.parse(localStorage.getItem('shipping_rates')) || {};
+        let products = [];
+        let fetchedOrders = [];
+        let currentProduct = null;
+
+        // تحميل بيانات الجزائر الجغرافية
+        async function loadAlgeriaData() {
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/othmanus/algeria-cities/master/json/algeria_cities.json');
+                const data = await res.json();
+                const wilayasMap = {};
+                data.forEach(item => {
+                    const wilayaKey = `${String(item.wilaya_code).padStart(2, '0')} - ${item.wilaya_name_ascii}`;
+                    if (!wilayasMap[wilayaKey]) wilayasMap[wilayaKey] = [];
+                    wilayasMap[wilayaKey].push(item.commune_name_ascii);
+                });
+                algeriaData = wilayasMap;
+                initWilayasDropdowns();
+            } catch (e) { console.error("خطأ جلب البيانات الجغرافية:", e); }
+        }
+
+        function initWilayasDropdowns() {
+            const selectOrder = document.getElementById('cust-wilaya');
+            const selectAdmin = document.getElementById('admin-shipping-wilaya');
+            if(!selectOrder) return;
+            selectOrder.innerHTML = '<option value="">اختر الولاية...</option>';
+            selectAdmin.innerHTML = '<option value="">اختر ولاية محددة...</option>';
+            
+            Object.keys(algeriaData).sort().forEach(w => {
+                selectOrder.innerHTML += `<option value="${w}">${w}</option>`;
+                selectAdmin.innerHTML += `<option value="${w}">${w}</option>`;
+            });
+        }
+
+        function onWilayaChange() {
+            const selectedWilaya = document.getElementById('cust-wilaya').value;
+            const communeSelect = document.getElementById('cust-commune');
+            communeSelect.innerHTML = '<option value="">اختر البلدية...</option>';
+            if (selectedWilaya && algeriaData[selectedWilaya]) {
+                algeriaData[selectedWilaya].sort().forEach(c => {
+                    communeSelect.innerHTML += `<option value="${c}">${c}</option>`;
+                });
+            }
+            updateShippingPrices();
+        }
+
+        // إعداد وتخصيص أسعار التوصيل
+        function loadWilayaShippingRates() {
+            const wilaya = document.getElementById('admin-shipping-wilaya').value;
+            const rates = dbShippingRates[wilaya] || defaultRates;
+            document.getElementById('rate-home').value = rates.home;
+            document.getElementById('rate-desk').value = rates.desk;
+        }
+
+        function saveShippingRates() {
+            const wilaya = document.getElementById('admin-shipping-wilaya').value;
+            if(!wilaya) { alert("يرجى اختيار ولاية أولاً!"); return; }
+            const home = parseFloat(document.getElementById('rate-home').value) || 0;
+            const desk = parseFloat(document.getElementById('rate-desk').value) || 0;
+            
+            dbShippingRates[wilaya] = { home, desk };
+            localStorage.setItem('shipping_rates', JSON.stringify(dbShippingRates));
+            alert(`✅ تم تحديث أسعار التوصيل لـ (${wilaya}) بنجاح!`);
+        }
+
+        function applyGlobalShipping() {
+            const home = parseFloat(document.getElementById('global-home').value);
+            const desk = parseFloat(document.getElementById('global-desk').value);
+            if(isNaN(home) || isNaN(desk)) {
+                alert("يرجى إدخال أسعار صحيحة للمنزل والمكتب أولاً!");
+                return;
+            }
+            defaultRates = { home, desk };
+            Object.keys(algeriaData).forEach(w => {
+                dbShippingRates[w] = { home, desk };
+            });
+            localStorage.setItem('shipping_rates', JSON.stringify(dbShippingRates));
+            alert("✅ تم تطبيق أسعار التوصيل الجديدة على جميع الولايات بنجاح!");
+        }
+
+        // جلب المنتجات والعرض
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/products`);
+                products = await res.json();
+                renderProducts(products);
+                renderAdminProductsList(products);
+            } catch (err) { console.error(err); }
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center text-gray-400 py-8">لا توجد منتجات متوفرة حالياً.</p>';
+                return;
+            }
+            items.forEach(p => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl overflow-hidden card-shadow flex flex-col justify-between hover:shadow-lg transition h-full">
+                        <div>
+                            <div class="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden p-2">
+                                <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-contain rounded-lg">
+                                <span class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">${p.badge || 'تخفيض'}</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="text-xs md:text-sm font-medium line-clamp-2 text-gray-800">${p.name}</h4>
+                                <div class="mt-2 flex items-baseline gap-1">
+                                    <span class="text-base md:text-lg font-black text-[#FF5000]">${parseFloat(p.price)} <span class="text-xs">د.ج</span></span>
+                                    ${p.old_price ? `<span class="text-xs text-gray-400 line-through">${parseFloat(p.old_price)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 pt-0">
+                            <button type="button" onclick="openModal('${p.id}')" class="w-full temu-btn text-white text-xs py-2 rounded-lg font-bold shadow">شراء الآن ⚡</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderAdminProductsList(items) {
+            const container = document.getElementById('admin-products-list');
+            if(!container) return;
+            container.innerHTML = '';
+            if(!items || items.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 py-2">لا توجد منتجات.</p>';
+                return;
+            }
+            items.forEach(p => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between py-2 border-b gap-2">
+                        <div class="flex items-center gap-2">
+                            <img src="${p.image_url}" class="w-10 h-10 object-contain bg-gray-100 rounded-lg border">
+                            <div>
+                                <h5 class="text-xs font-bold text-gray-800 line-clamp-1">${p.name}</h5>
+                                <span class="text-[11px] text-[#FF5000] font-bold">${p.price} د.ج</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-1">
+                            <button type="button" onclick="editProduct('${p.id}')" class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs font-bold hover:bg-blue-200">تعديل ✏️</button>
+                            <button type="button" onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold hover:bg-red-200">حذف 🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // إضافة وتعديل منتج
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('p-id').value;
+            const formData = new FormData();
+            
+            formData.append('name', document.getElementById('p-title').value);
+            formData.append('category', document.getElementById('p-category').value);
+            formData.append('price', document.getElementById('p-price').value);
+            formData.append('old_price', document.getElementById('p-old-price').value || 0);
+            formData.append('badge', document.getElementById('p-badge').value || 'عرض محدود');
+            formData.append('description', document.getElementById('p-html-desc').value);
+
+            const fileInput = document.getElementById('p-file');
+            if (fileInput.files && fileInput.files.length > 0) {
+                formData.append('image_file', fileInput.files[0]);
+            }
+
+            const method = editId ? 'PUT' : 'POST';
+            const url = editId ? `${API_URL}/admin/products/${editId}` : `${API_URL}/admin/products`;
+
+            try {
+                const res = await fetch(url, { method: method, body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    alert(editId ? '✅ تم تعديل المنتج بنجاح!' : '🎉 تم حفظ المنتج بنجاح!');
+                    resetForm();
+                    loadProducts();
+                } else {
+                    alert('❌ حدث خطأ: ' + (data.error || 'فشلت العملية'));
+                }
+            } catch(err) { alert('❌ حدث خطأ أثناء النشر'); }
+        }
+
+        function editProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            if(!p) return;
+            document.getElementById('p-id').value = p.id;
+            document.getElementById('p-title').value = p.name;
+            document.getElementById('p-category').value = p.category || 'electronics';
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-old-price').value = p.old_price || '';
+            document.getElementById('p-badge').value = p.badge || '';
+            document.getElementById('p-html-desc').value = p.description || '';
+
+            document.getElementById('form-title').innerText = '✏️ تعديل منتج قائم';
+            document.getElementById('submit-btn').innerText = 'حفظ التعديلات 💾';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+        }
+
+        async function deleteProduct(id) {
+            if(!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if(data.success) {
+                    alert('🗑️ تم حذف المنتج بنجاح!');
+                    loadProducts();
+                } else {
+                    alert('❌ فشل الحذف!');
+                }
+            } catch(err) { alert('❌ خطأ في الاتصال بالسيرفر'); }
+        }
+
+        function resetForm() {
+            document.getElementById('addProductForm').reset();
+            document.getElementById('p-id').value = '';
+            document.getElementById('form-title').innerText = '➕ إضافة منتج جديد';
+            document.getElementById('submit-btn').innerText = 'نشر المنتج 🚀';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+
+        // نافذة الشراء الشفافة والطلبات
+        function openModal(id) {
+            currentProduct = products.find(p => p.id === id);
+            if(!currentProduct) return;
+            
+            const prodPrice = parseFloat(currentProduct.price);
+            document.getElementById('modal-prod-price').innerText = `${prodPrice.toFixed(2)} د.ج`;
+            document.getElementById('modal-product-details').innerHTML = `
+                <h2 class="text-lg font-bold text-gray-900 mb-1">${currentProduct.name}</h2>
+                <div class="text-xs text-gray-600">${currentProduct.description || ''}</div>
+            `;
+            updateShippingPrices();
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function updateShippingPrices() {
+            if(!currentProduct) return;
+            const wilaya = document.getElementById('cust-wilaya').value;
+            const rates = dbShippingRates[wilaya] || defaultRates;
+            const shipTypeSelect = document.querySelector('input[name="modal_ship"]:checked');
+            const shipType = shipTypeSelect ? shipTypeSelect.value : 'home';
+            
+            const prodPrice = parseFloat(currentProduct.price);
+            const shipFee = shipType === 'home' ? parseFloat(rates.home) : parseFloat(rates.desk);
+            const total = prodPrice + shipFee;
+
+            document.getElementById('modal-ship-price').innerText = `${shipFee.toFixed(2)} د.ج`;
+            document.getElementById('modal-total-price').innerText = `${total.toFixed(2)} د.ج`;
+        }
+
+        async function handleOrderSubmit(e) {
+            e.preventDefault();
+            if(!currentProduct) return;
+
+            const wilaya = document.getElementById('cust-wilaya').value;
+            const commune = document.getElementById('cust-commune').value;
+            const rates = dbShippingRates[wilaya] || defaultRates;
+            const shipType = document.querySelector('input[name="modal_ship"]:checked').value;
+            const shipFee = shipType === 'home' ? parseFloat(rates.home) : parseFloat(rates.desk);
+            const totalPrice = parseFloat(currentProduct.price) + shipFee;
+
+            const orderData = {
+                customer_name: document.getElementById('cust-name').value,
+                phone: document.getElementById('cust-phone').value,
+                wilaya: wilaya,
+                baladia: commune,
+                product_name: currentProduct.name,
+                price: currentProduct.price,
+                shipping_price: shipFee,
+                total_price: totalPrice,
+                shipping_type: shipType
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ تم إرسال طلبك وحفظه بنجاح!');
+                    closeModal();
+                } else {
+                    alert('❌ فشل إرسال الطلب!');
+                }
+            } catch(err) { alert('❌ حدث خطأ في الاتصال بالسيرفر'); }
+        }
+
+        function closeModal() { document.getElementById('checkout-modal').classList.add('hidden'); }
+
+        async function fetchOrders() {
+            try {
+                const res = await fetch(`${API_URL}/orders`);
+                fetchedOrders = await res.json();
+                renderOrdersTable(fetchedOrders);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderOrdersTable(data) {
+            const tbody = document.getElementById('orders-table-body');
+            document.getElementById('orders-count').innerText = data.length;
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">لا توجد طلبات.</td></tr>';
+                return;
+            }
+
+            data.forEach(o => {
+                const dateFormatted = new Date(o.created_at || Date.now()).toLocaleString('ar-DZ');
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2 font-bold text-gray-500">#${o.id.substring(o.id.length - 5)}</td>
+                        <td class="p-2 font-bold">${o.customer_name}</td>
+                        <td class="p-2">${o.phone}</td>
+                        <td class="p-2">${o.wilaya} - ${o.baladia || ''}</td>
+                        <td class="p-2">${o.shipping_type === 'home' ? '🏠 منزل' : '🏢 مكتب'}</td>
+                        <td class="p-2 font-bold text-[#FF5000]">${parseFloat(o.total_price || 0).toFixed(2)} د.ج</td>
+                        <td class="p-2 text-gray-500 text-[10px]">${dateFormatted}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function exportOrdersCSV() {
+            if(!fetchedOrders || fetchedOrders.length === 0) {
+                alert("لا توجد طلبات لتصديرها.");
+                return;
+            }
+            let csv = "data:text/csv;charset=utf-8,\uFEFFالرقم,الاسم,الهاتف,الولاية,البلدية,نوع التوصيل,المجموع الكلي,التاريخ\n";
+            fetchedOrders.forEach(o => {
+                csv += `"${o.id}","${o.customer_name}","${o.phone}","${o.wilaya}","${o.baladia || ''}","${o.shipping_type === 'home' ? 'منزل' : 'مكتب'}","${o.total_price}","${new Date(o.created_at || Date.now()).toLocaleString('ar-DZ')}"\n`;
+            });
+            const link = document.createElement("a");
+            link.href = encodeURI(csv);
+            link.download = `طلبات_NasriSHOP_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            renderProducts(filtered);
+        }
+
+        function switchTab(t) {
+            document.getElementById('store-view').classList.toggle('hidden', t === 'admin');
+            document.getElementById('admin-view').classList.toggle('hidden', t !== 'admin');
+            if(t === 'admin') fetchOrders();
+        }
+
+        // تحسين حماية كلمة المرور بقيم مخفية
+        function openPassModal() {
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('pass-modal').classList.remove('hidden');
+        }
+
+        function closePassModal() {
+            document.getElementById('pass-modal').classList.add('hidden');
+        }
+
+        function checkAdminPass() {
+            const pass = document.getElementById('admin-pass-input').value;
+            if (pass === "NABILAhammam1988") {
+                closePassModal();
+                switchTab('admin');
+            } else {
+                alert("❌ كلمة المرور غير صحيحة!");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAlgeriaData();
+            loadProducts();
+        });
+    </script>
+</body>
+</html>
