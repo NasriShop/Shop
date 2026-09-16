@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-// دعم المنفذ السحابي الديناميكي للنشر
 const PORT = process.env.PORT || 3000;
 
 // التأكد من وجود مجلد رفع الصور
@@ -141,6 +140,41 @@ app.post('/api/orders', async (req, res) => {
         await newOrder.save();
         res.json({ success: true, order: newOrder });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// 7. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات
+app.post('/api/orders/:id/archive', async (req, res) => {
+    try {
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo3uCYHT1kDKvhBgi2NVmhAAYsrv6zNBSWsOrKHc-lq6FrV3obyN4xE37gsYMPTX8/exec";
+        const order = await Order.findById(req.params.id);
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+        }
+
+        // إرسال البيانات لـ Google Sheets
+        const fetch = (await import('node-fetch')).default;
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerName: order.customer_name || '',
+                phone: order.phone || '',
+                wilaya: order.wilaya || '',
+                commune: order.baladia || '',
+                productName: order.product_name || '',
+                totalPrice: order.total_price || 0,
+                shippingType: order.shipping_type === 'home' ? 'منزل' : 'مكتب'
+            })
+        });
+
+        // حذف الطلب من قاعدة البيانات بعد الأرشفة
+        await Order.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'تم نقل الطلب لأرشيف Google Sheets وحذفه من المتجر بنجاح!' });
+    } catch (err) {
+        console.error('خطأ الأرشفة:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 app.listen(PORT, () => console.log(`🚀 السيرفر يعمل بنجاح على المنفذ: ${PORT}`));

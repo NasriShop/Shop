@@ -144,10 +144,11 @@
                                     <th class="p-2">التوصيل</th>
                                     <th class="p-2">المجموع</th>
                                     <th class="p-2">التاريخ والتوقيت</th>
+                                    <th class="p-2 text-center">الإجراء</th>
                                 </tr>
                             </thead>
                             <tbody id="orders-table-body">
-                                <tr><td colspan="7" class="text-center py-4 text-gray-400">جاري تحميل الطلبات...</td></tr>
+                                <tr><td colspan="8" class="text-center py-4 text-gray-400">جاري تحميل الطلبات...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -523,7 +524,7 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">لا توجد طلبات.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-400">لا توجد طلبات.</td></tr>';
                 return;
             }
 
@@ -538,9 +539,32 @@
                         <td class="p-2">${o.shipping_type === 'home' ? '🏠 منزل' : '🏢 مكتب'}</td>
                         <td class="p-2 font-bold text-[#FF5000]">${parseFloat(o.total_price || 0).toFixed(2)} د.ج</td>
                         <td class="p-2 text-gray-500 text-[10px]">${dateFormatted}</td>
+                        <td class="p-2 text-center">
+                            <button onclick="archiveOrder('${o.id}')" class="bg-green-600 hover:bg-green-700 text-white font-bold px-2.5 py-1 rounded text-xs shadow transition">
+                                أرشفة لـ Google Sheet 📊
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
+        }
+
+        async function archiveOrder(orderId) {
+            if(!confirm('هل أنت متأكد من نقل هذا الطلب إلى أرشيف Google Sheets وحذفه من لوحة التحكم؟')) return;
+
+            try {
+                const res = await fetch(`${API_URL}/orders/${orderId}/archive`, { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    fetchOrders();
+                } else {
+                    alert('❌ فشلت عملية الأرشفة: ' + (data.message || data.error));
+                }
+            } catch (err) {
+                alert('❌ حدث خطأ في الاتصال بالسيرفر أثناء الأرشفة');
+            }
         }
 
         function exportOrdersCSV() {
@@ -570,7 +594,6 @@
             if(t === 'admin') fetchOrders();
         }
 
-        // تحسين حماية كلمة المرور بقيم مخفية
         function openPassModal() {
             document.getElementById('admin-pass-input').value = '';
             document.getElementById('pass-modal').classList.remove('hidden');
