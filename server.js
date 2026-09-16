@@ -152,8 +152,7 @@ app.post('/api/orders/:id/archive', async (req, res) => {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        // إرسال البيانات لـ Google Sheets
-        const fetch = (await import('node-fetch')).default;
+        // إرسال البيانات مباشرة باستخدام fetch المدمجة في Node.js
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
