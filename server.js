@@ -15,7 +15,6 @@ if (!fs.existsSync('uploads')) {
 
 // الاتصال بقاعدة البيانات MongoDB Atlas
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://zoubirimp2026_db_user:QxatnDM1y2MzBL48@cluster0.l5jbnnu.mongodb.net/nasri_shop?retryWrites=true&w=majority";
-
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ تم الاتصال بقاعدة البيانات بنجاح'))
     .catch(err => console.error('❌ خطأ قاعدة البيانات:', err.message));
