@@ -164,35 +164,34 @@ app.post('/api/orders', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات (معالجة موثوقة للارسال والتوجيه)
+// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات
 app.post('/api/orders/:id/archive', async (req, res) => {
     try {
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo3uCYHT1kDKvhBgi2NVmhAAYsrv6zNBSWsOrKHc-lq6FrV3obyN4xE37gsYMPTX8/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMkwXfTBfd_fkm_0mipWayNzEc68q0umdSTp2w3B-kHMy0Q3JLtyBqiuQLgpPvK2Y/exec";
         const order = await Order.findById(req.params.id);
         
         if (!order) {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        const postData = JSON.stringify({
+        const formData = new URLSearchParams({
             customerName: order.customer_name || '',
             phone: order.phone || '',
             wilaya: order.wilaya || '',
             commune: order.baladia || '',
-            productName: order.product_name || '',
-            quantity: 1,
-            totalPrice: order.total_price || 0
+            totalPrice: order.total_price || 0,
+            productName: order.product_name || ''
         });
 
-        // إرسال كـ POST مع تتبع التوجيهات من خوادم قوقل
+        // إرسال البيانات
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             redirect: 'follow',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: postData
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
         });
 
-        // حذف الطلب من قاعدة البيانات بعد الأرشفة
+        // حذف الطلب من قاعدة البيانات بعد نجاح الأرشفة
         await Order.findByIdAndDelete(req.params.id);
         res.json({ success: true, message: 'تم أرشفة الطلب بنجاح ووضعه في Google Sheets!' });
     } catch (err) {
