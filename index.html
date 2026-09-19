@@ -12,7 +12,7 @@
         .temu-btn:hover { background-color: #e04400; transform: translateY(-1px); }
         .card-shadow { box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         
-        /* تأثير الزوم والتكبير الاحترافي للصور */
+        /* تأثير التكبير والزوم للصور */
         .img-zoom-container { overflow: hidden; position: relative; }
         .img-zoom-container .zoom-badge {
             position: absolute; bottom: 8px; right: 8px; z-index: 10;
@@ -25,49 +25,58 @@
         .img-zoom-container:hover .img-zoom { transform: scale(1.15); }
     </style>
 </head>
-<body class="pb-12 text-slate-800 antialiased">
+<body class="pb-20 text-slate-800 antialiased">
 
-    <!-- الهيدر الرئيسي -->
+    <!-- الشريط العلوي للإعلانات والتوصيل -->
     <header class="sticky top-0 z-40 bg-[#FF5000] text-white shadow-md">
-        <div class="bg-black/20 text-[11px] py-1 text-center font-medium tracking-wide">
+        <div class="bg-black/20 text-[11px] py-1 text-center font-medium tracking-wide" id="top-bar-announcement">
             🔥 شحن سريع لجميع الولايات (58 ولاية) | الدفع عند الاستلام مع معاينة المنتج 🤝
         </div>
         
-        <div class="container mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
-            <h1 class="text-xl md:text-2xl font-black tracking-tight cursor-pointer flex items-center gap-1" onclick="switchTab('store')">
+        <div class="container mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 sm:gap-4">
+            <h1 class="text-lg sm:text-2xl font-black tracking-tight cursor-pointer flex items-center gap-1" onclick="switchTab('store')">
                 Nasri<span class="text-yellow-300">SHOP</span>
             </h1>
             
-            <div class="flex-1 max-w-md relative">
-                <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="ابحث عن منتج..." class="w-full py-1.5 px-4 pr-9 rounded-full text-gray-800 text-xs focus:outline-none bg-white/95 shadow-inner">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-gray-400 text-xs"></i>
+            <div class="flex-1 max-w-xs sm:max-w-md relative">
+                <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="ابحث عن منتج..." class="w-full py-1.5 px-3 pr-8 text-slate-800 text-xs rounded-full focus:outline-none bg-white/95 shadow-inner">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-slate-400 text-xs"></i>
             </div>
 
-            <button onclick="openPassModal()" class="bg-black/20 hover:bg-black/30 px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-lock"></i> <span>الإدارة</span>
-            </button>
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- اختيار اللغة -->
+                <select id="langSelector" onchange="changeLanguage(this.value)" class="bg-black/20 text-white text-[11px] font-bold py-1 px-1.5 rounded-lg border border-white/20 focus:outline-none cursor-pointer">
+                    <option value="ar" class="text-slate-800">العربية 🇩🇿</option>
+                    <option value="fr" class="text-slate-800">Français 🇫🇷</option>
+                    <option value="en" class="text-slate-800">English 🇬🇧</option>
+                </select>
+
+                <button onclick="openPassModal()" class="bg-black/20 hover:bg-black/30 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-lock"></i> <span data-i18n="admin_btn" class="hidden sm:inline">الإدارة</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- واجهة المتجر للزبائن -->
+    <!-- واجهة المتجر الرئيسية للزبائن -->
     <div id="store-view">
-        <main class="container mx-auto px-3 sm:px-4 mt-5">
-            <!-- بانر المنتج المستهدف للإشهار بتصميم احترافي يبرز الصورة بحجم كبير -->
-            <div id="featured-ad-banner" class="hidden mb-6 bg-gradient-to-r from-orange-600 via-red-600 to-amber-600 rounded-3xl text-white p-5 md:p-8 shadow-xl relative overflow-hidden">
+        <main class="container mx-auto px-3 sm:px-4 mt-4 sm:mt-6">
+            <!-- بانر المنتج المستهدف للإشهار -->
+            <div id="featured-ad-banner" class="hidden mb-6 bg-gradient-to-r from-orange-600 via-red-600 to-amber-600 rounded-3xl text-white p-4 sm:p-8 shadow-xl relative overflow-hidden">
                 <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6" id="featured-ad-content"></div>
             </div>
 
-            <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-slate-800">
-                <i class="fa-solid fa-fire text-[#FF5000]"></i> جميع المنتجات المتاحة
+            <h3 class="text-sm sm:text-base font-bold mb-3 flex items-center gap-2 text-slate-800">
+                <i class="fa-solid fa-fire text-[#FF5000]"></i> <span data-i18n="all_products">جميع المنتجات المتاحة</span>
             </h3>
-            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 md:gap-3.5"></div>
+            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5"></div>
         </main>
     </div>
 
-    <!-- واجهة لوحة التحكم -->
+    <!-- واجهة لوحة التحكم الإدارية -->
     <div id="admin-view" class="container mx-auto px-4 py-6 hidden">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold text-slate-800">🛠️ لوحة إدارة NasriSHOP</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-800">🛠️ لوحة إدارة NasriSHOP</h2>
             <div class="flex gap-2">
                 <button onclick="exportOrdersCSV()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700">📊 تصدير Excel</button>
                 <button onclick="switchTab('store')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold">العودة للمتجر 🛒</button>
@@ -114,7 +123,7 @@
                     </form>
                 </div>
 
-                <!-- إعدادات أسعار التوصيل للولايات -->
+                <!-- إعدادات أسعار التوصيل -->
                 <div class="bg-white p-4 rounded-2xl border card-shadow space-y-3">
                     <h3 class="text-sm font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
                         <i class="fa-solid fa-truck text-[#FF5000]"></i> أسعار التوصيل
@@ -123,7 +132,7 @@
                     <div class="bg-slate-50 p-2.5 rounded-xl border space-y-2">
                         <span class="block text-[11px] font-bold text-slate-700">⚡ تعيين سعر موحد لجميع الولايات:</span>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="global-home" placeholder="للمنزل (د.ج)" class="p-1.5 border rounded-lg text-xs">
+                            <input type="number" id="global-home" placeholder="لمنزل (د.ج)" class="p-1.5 border rounded-lg text-xs">
                             <input type="number" id="global-desk" placeholder="للمكتب (د.ج)" class="p-1.5 border rounded-lg text-xs">
                         </div>
                         <button onclick="applyGlobalShipping()" class="w-full bg-orange-600 text-white py-1 rounded-lg text-[11px] font-bold hover:bg-orange-700">تطبيق على 58 ولاية 🌐</button>
@@ -147,7 +156,6 @@
                 </div>
             </div>
 
-            <!-- قائمة إدارة المنتجات والطلبات -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white p-4 rounded-2xl border card-shadow">
                     <h3 class="text-sm font-bold text-slate-800 border-b pb-2 mb-3">🛍️ المنتجات الحالية</h3>
@@ -181,9 +189,9 @@
         </div>
     </div>
 
-    <!-- نافذة تفاصيل المنتج المخصصة الكبيرة -->
+    <!-- نافذة تفاصيل المنتج المخصصة -->
     <div id="details-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
-        <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-5 relative card-shadow">
+        <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 relative card-shadow">
             <button onclick="closeDetailsModal()" class="absolute top-3 left-3 text-slate-400 text-xl font-bold hover:text-red-600 transition">&times;</button>
             <div id="details-modal-content"></div>
         </div>
@@ -220,45 +228,69 @@
             
             <div id="modal-product-details" class="mb-3 border-b pb-3"></div>
             
-            <h3 class="text-xs font-bold text-[#FF5000] mb-2 flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> استمارة الطلب (الدفع عند الاستلام)</h3>
+            <h3 class="text-xs font-bold text-[#FF5000] mb-2 flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> <span data-i18n="order_form">استمارة الطلب (الدفع عند الاستلام)</span></h3>
             <form onsubmit="handleOrderSubmit(event)" class="space-y-2.5">
-                <input type="text" id="cust-name" required placeholder="الاسم الكامل" class="w-full p-2 border rounded-lg text-xs">
-                <input type="tel" id="cust-phone" required placeholder="رقم الهاتف (06/07/05)" class="w-full p-2 border rounded-lg text-xs">
+                <input type="text" id="cust-name" required placeholder="الاسم الكامل" data-i18n-ph="fullname_ph" class="w-full p-2 border rounded-lg text-xs">
+                <input type="tel" id="cust-phone" required placeholder="رقم الهاتف (06/07/05)" data-i18n-ph="phone_ph" class="w-full p-2 border rounded-lg text-xs">
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">الولاية</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-0.5" data-i18n="wilaya_label">الولاية</label>
                         <select id="cust-wilaya" onchange="onWilayaChange()" required class="w-full p-2 border rounded-lg text-xs bg-white"></select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">البلدية</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-0.5" data-i18n="commune_label">البلدية</label>
                         <select id="cust-commune" required class="w-full p-2 border rounded-lg text-xs bg-white">
-                            <option value="">اختر البلدية...</option>
+                            <option value="" data-i18n="select_commune">اختر البلدية...</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 text-[11px] font-semibold pt-0.5">
                     <label class="flex-1 border p-2 rounded-lg text-center cursor-pointer flex items-center justify-center gap-1">
-                        <input type="radio" name="modal_ship" value="home" checked onchange="updateShippingPrices()"> للمنزل 🏠
+                        <input type="radio" name="modal_ship" value="home" checked onchange="updateShippingPrices()"> <span data-i18n="home_ship">للمنزل 🏠</span>
                     </label>
                     <label class="flex-1 border p-2 rounded-lg text-center cursor-pointer flex items-center justify-center gap-1">
-                        <input type="radio" name="modal_ship" value="desk" onchange="updateShippingPrices()"> للمكتب 🏢
+                        <input type="radio" name="modal_ship" value="desk" onchange="updateShippingPrices()"> <span data-i18n="office_ship">للمكتب 🏢</span>
                     </label>
                 </div>
 
                 <div class="bg-slate-50 p-3 rounded-xl text-xs space-y-1 border">
-                    <div class="flex justify-between text-slate-600"><span>سعر المنتج:</span><span id="modal-prod-price" class="font-bold">0 د.ج</span></div>
-                    <div class="flex justify-between text-slate-600"><span>التوصيل:</span><span id="modal-ship-price" class="font-bold">0 د.ج</span></div>
+                    <div class="flex justify-between text-slate-600"><span data-i18n="prod_price_label">سعر المنتج:</span><span id="modal-prod-price" class="font-bold">0 د.ج</span></div>
+                    <div class="flex justify-between text-slate-600"><span data-i18n="ship_fee_label">التوصيل:</span><span id="modal-ship-price" class="font-bold">0 د.ج</span></div>
                     <hr class="my-1">
-                    <div class="flex justify-between font-black text-base text-[#FF5000]"><span>المجموع الكلي:</span><span id="modal-total-price">0 د.ج</span></div>
+                    <div class="flex justify-between font-black text-base text-[#FF5000]"><span data-i18n="total_label">المجموع الكلي:</span><span id="modal-total-price">0 د.ج</span></div>
                 </div>
-                <button type="submit" class="w-full temu-btn text-white py-3 rounded-xl font-bold text-xs shadow-md">تأكيد الطلب الآن ⚡</button>
+                <button type="submit" class="w-full temu-btn text-white py-3 rounded-xl font-bold text-xs shadow-md" data-i18n="confirm_order_btn">تأكيد الطلب الآن ⚡</button>
             </form>
         </div>
     </div>
 
-    <!-- البرمجة التفاعلية -->
+    <!-- أزرار التواصل العائمة بأسفل الشاشة -->
+    <div class="fixed bottom-4 left-4 z-40 flex flex-col gap-2">
+        <a href="https://wa.me/213542248858" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-full shadow-lg flex items-center justify-center transition hover:scale-110" title="WhatsApp">
+            <i class="fa-brands fa-whatsapp text-2xl"></i>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=61578436251516" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center transition hover:scale-110" title="Facebook Page">
+            <i class="fa-brands fa-facebook-f text-xl"></i>
+        </a>
+    </div>
+
+    <!-- الفوتر السخلي للتواصل والمساعدة -->
+    <footer class="mt-12 bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800">
+        <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">
+            <div>
+                <h4 class="text-white font-black text-sm mb-1">NasriSHOP</h4>
+                <p data-i18n="footer_rights">جميع الحقوق محفوظة © 2026</p>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <a href="https://wa.me/213542248858" target="_blank" class="hover:text-emerald-400 flex items-center gap-1 font-bold"><i class="fa-brands fa-whatsapp"></i> 0542248858</a>
+                <a href="https://www.facebook.com/profile.php?id=61578436251516" target="_blank" class="hover:text-blue-400 flex items-center gap-1 font-bold"><i class="fa-brands fa-facebook"></i> Facebook</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- البرمجة التفاعلية ونظام الترجمة -->
     <script>
         const API_URL = "/api";
         let algeriaData = {};
@@ -267,6 +299,109 @@
         let products = [];
         let fetchedOrders = [];
         let currentProduct = null;
+        let currentLang = "ar";
+
+        // قاموس الترجمات للغات الثلاث
+        const translations = {
+            ar: {
+                top_announcement: "🔥 شحن سريع لجميع الولايات (58 ولاية) | الدفع عند الاستلام مع معاينة المنتج 🤝",
+                search_placeholder: "ابحث عن منتج...",
+                admin_btn: "الإدارة",
+                all_products: "جميع المنتجات المتاحة",
+                details_btn: "👁️ التفاصيل",
+                buy_now_btn: "شراء الآن ⚡",
+                order_form: "استمارة الطلب (الدفع عند الاستلام)",
+                fullname_ph: "الاسم الكامل",
+                phone_ph: "رقم الهاتف (06/07/05)",
+                wilaya_label: "الولاية",
+                commune_label: "البلدية",
+                select_commune: "اختر البلدية...",
+                home_ship: "للمنزل 🏠",
+                office_ship: "للمكتب 🏢",
+                prod_price_label: "سعر المنتج:",
+                ship_fee_label: "التوصيل:",
+                total_label: "المجموع الكلي:",
+                confirm_order_btn: "تأكيد الطلب الآن ⚡",
+                footer_rights: "جميع الحقوق محفوظة © 2026",
+                featured_badge: "🔥 العرض الأكثر طلباً",
+                currency: "د.ج"
+            },
+            fr: {
+                top_announcement: "🔥 Livraison rapide 58 Wilayas | Paiement à la إlivraison avec vérification 🤝",
+                search_placeholder: "Rechercher un produit...",
+                admin_btn: "Admin",
+                all_products: "Tous les produits disponibles",
+                details_btn: "👁️ Détails",
+                buy_now_btn: "Acheter ⚡",
+                order_form: "Formulaire de commande (Paiement à la livraison)",
+                fullname_ph: "Nom et prénom",
+                phone_ph: "Numéro de téléphone",
+                wilaya_label: "Wilaya",
+                commune_label: "Commune",
+                select_commune: "Sélectionnez la commune...",
+                home_ship: "A domicile 🏠",
+                office_ship: "Au bureau 🏢",
+                prod_price_label: "Prix du produit:",
+                ship_fee_label: "Livraison:",
+                total_label: "Total global:",
+                confirm_order_btn: "Confirmer la commande ⚡",
+                footer_rights: "Tous droits réservés © 2026",
+                featured_badge: "🔥 Offre la plus demandée",
+                currency: "DA"
+            },
+            en: {
+                top_announcement: "🔥 Fast delivery to 58 Wilayas | Cash on delivery with product inspection 🤝",
+                search_placeholder: "Search for a product...",
+                admin_btn: "Admin",
+                all_products: "All Available Products",
+                details_btn: "👁️ Details",
+                buy_now_btn: "Buy Now ⚡",
+                order_form: "Order Form (Cash On Delivery)",
+                fullname_ph: "Full Name",
+                phone_ph: "Phone Number",
+                wilaya_label: "State/Wilaya",
+                commune_label: "Municipality",
+                select_commune: "Select municipality...",
+                home_ship: "Home Delivery 🏠",
+                office_ship: "Office Pick-up 🏢",
+                prod_price_label: "Product Price:",
+                ship_fee_label: "Shipping Fee:",
+                total_label: "Grand Total:",
+                confirm_order_btn: "Confirm Order Now ⚡",
+                footer_rights: "All Rights Reserved © 2026",
+                featured_badge: "🔥 Most Popular Offer",
+                currency: "DZD"
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            const html = document.documentElement;
+
+            if (lang === 'ar') {
+                html.dir = 'rtl';
+                html.lang = 'ar';
+            } else {
+                html.dir = 'ltr';
+                html.lang = lang;
+            }
+
+            document.getElementById('top-bar-announcement').innerText = t.top_announcement;
+            document.getElementById('searchInput').placeholder = t.search_placeholder;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerText = t[key];
+            });
+
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            renderProducts(products);
+        }
 
         // تحميل بيانات الجزائر الجغرافية
         async function loadAlgeriaData() {
@@ -309,7 +444,6 @@
             updateShippingPrices();
         }
 
-        // إعداد وتخصيص أسعار التوصيل
         function loadWilayaShippingRates() {
             const wilaya = document.getElementById('admin-shipping-wilaya').value;
             const rates = dbShippingRates[wilaya] || defaultRates;
@@ -343,7 +477,6 @@
             alert("✅ تم تطبيق أسعار التوصيل الجديدة على جميع الولايات بنجاح!");
         }
 
-        // جلب المنتجات والعرض الاحترافي
         async function loadProducts() {
             try {
                 const res = await fetch(`${API_URL}/products`);
@@ -359,19 +492,19 @@
             const adContent = document.getElementById('featured-ad-content');
             if (!grid) return;
 
+            const t = translations[currentLang];
             grid.innerHTML = '';
             
-            // تصميم المنتج المستهدف المروج
             const featuredProd = items.find(p => p.is_featured);
             if (featuredProd && adBanner && adContent) {
                 adBanner.classList.remove('hidden');
                 adContent.innerHTML = `
-                    <div class="flex-1 space-y-2 text-right">
-                        <span class="bg-yellow-400 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full inline-block uppercase tracking-wider">🔥 العرض الأكثر طلباً</span>
+                    <div class="flex-1 space-y-2">
+                        <span class="bg-yellow-400 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full inline-block uppercase tracking-wider">${t.featured_badge}</span>
                         <h2 class="text-xl md:text-3xl font-black text-white leading-snug">${featuredProd.name}</h2>
                         <div class="flex items-baseline gap-2 pt-1">
-                            <span class="text-2xl font-black text-yellow-300">${parseFloat(featuredProd.price)} <span class="text-xs">د.ج</span></span>
-                            ${featuredProd.old_price ? `<span class="text-xs line-through text-orange-200 opacity-80">${parseFloat(featuredProd.old_price)} د.ج</span>` : ''}
+                            <span class="text-2xl font-black text-yellow-300">${parseFloat(featuredProd.price)} <span class="text-xs">${t.currency}</span></span>
+                            ${featuredProd.old_price ? `<span class="text-xs line-through text-orange-200 opacity-80">${parseFloat(featuredProd.old_price)}${t.currency}</span>` : ''}
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
@@ -380,8 +513,8 @@
                             <span class="zoom-badge">🔍 Zoom: 150%</span>
                         </div>
                         <div class="flex flex-col gap-2 w-full sm:w-36">
-                            <button onclick="openDetailsModal('${featuredProd.id}')" class="bg-white hover:bg-slate-100 text-slate-900 font-extrabold px-3 py-2 rounded-xl text-[11px] shadow transition w-full">👁️ تفاصيل المنتج</button>
-                            <button onclick="openModal('${featuredProd.id}')" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-4 py-2 rounded-xl text-xs shadow-md w-full transition">شراء الآن ⚡</button>
+                            <button onclick="openDetailsModal('${featuredProd.id}')" class="bg-white hover:bg-slate-100 text-slate-900 font-extrabold px-3 py-2 rounded-xl text-[11px] shadow transition w-full">${t.details_btn}</button>
+                            <button onclick="openModal('${featuredProd.id}')" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-4 py-2 rounded-xl text-xs shadow-md w-full transition">${t.buy_now_btn}</button>
                         </div>
                     </div>
                 `;
@@ -394,39 +527,38 @@
                 return;
             }
 
-            // عرض بطاقات المنتجات مع كبر المساحة البصرية وصغر النصوص
             items.forEach(p => {
                 grid.innerHTML += `
                     <div class="bg-white rounded-2xl overflow-hidden card-shadow flex flex-col justify-between hover:shadow-lg transition-all duration-300 border border-slate-100 relative ${p.is_featured ? 'ring-2 ring-[#FF5000]' : ''}">
-                        ${p.is_featured ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow">🌟 مميز</span>' : ''}
+                        ${p.is_featured ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow">🌟</span>' : ''}
                         <div>
                             <div class="relative w-full aspect-square bg-slate-50 flex items-center justify-center overflow-hidden p-3 img-zoom-container cursor-pointer" onclick="openDetailsModal('${p.id}')">
                                 <img src="${p.image_url}" alt="${p.name}" class="img-zoom w-full h-full object-contain">
                                 <span class="zoom-badge">🔍 Zoom: 150%</span>
-                                <span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">${p.badge || 'تخفيض'}</span>
+                                <span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">${p.badge || 'PROMO'}</span>
                             </div>
                             <div class="p-2.5">
                                 <h4 class="text-[11px] font-bold line-clamp-1 text-slate-700 cursor-pointer hover:text-[#FF5000] transition" onclick="openDetailsModal('${p.id}')">${p.name}</h4>
                                 <div class="mt-1 flex items-baseline gap-1">
-                                    <span class="text-sm font-black text-[#FF5000]">${parseFloat(p.price)} <span class="text-[9px]">د.ج</span></span>
+                                    <span class="text-sm font-black text-[#FF5000]">${parseFloat(p.price)} <span class="text-[9px]">${t.currency}</span></span>
                                     ${p.old_price ? `<span class="text-[10px] text-slate-400 line-through">${parseFloat(p.old_price)}</span>` : ''}
                                 </div>
                             </div>
                         </div>
                         <div class="p-2.5 pt-0 space-y-1">
-                            <button type="button" onclick="openDetailsModal('${p.id}')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] py-1 rounded-lg font-bold transition">👁️ التفاصيل</button>
-                            <button type="button" onclick="openModal('${p.id}')" class="w-full temu-btn text-white text-[11px] py-1.5 rounded-lg font-bold shadow">شراء الآن ⚡</button>
+                            <button type="button" onclick="openDetailsModal('${p.id}')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] py-1 rounded-lg font-bold transition">${t.details_btn}</button>
+                            <button type="button" onclick="openModal('${p.id}')" class="w-full temu-btn text-white text-[11px] py-1.5 rounded-lg font-bold shadow">${t.buy_now_btn}</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // نافذة تفاصيل المنتج الكبيرة
         function openDetailsModal(id) {
             const p = products.find(prod => prod.id === id);
             if(!p) return;
 
+            const t = translations[currentLang];
             const content = document.getElementById('details-modal-content');
             content.innerHTML = `
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -436,13 +568,13 @@
                     </div>
                     <div class="flex flex-col justify-between space-y-3">
                         <div>
-                            <span class="inline-block bg-orange-100 text-[#FF5000] text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">${p.badge || 'عرض خاص'}</span>
+                            <span class="inline-block bg-orange-100 text-[#FF5000] text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">${p.badge || 'PROMO'}</span>
                             <h2 class="text-base font-black text-slate-800 mb-1">${p.name}</h2>
-                            <div class="text-lg font-black text-[#FF5000] mb-2">${parseFloat(p.price)} د.ج ${p.old_price ? `<span class="text-xs text-slate-400 line-through mr-1">${parseFloat(p.old_price)} د.ج</span>` : ''}</div>
+                            <div class="text-lg font-black text-[#FF5000] mb-2">${parseFloat(p.price)} ${t.currency} ${p.old_price ? `<span class="text-xs text-slate-400 line-through mr-1">${parseFloat(p.old_price)}${t.currency}</span>` : ''}</div>
                             <hr class="mb-3">
                             <div class="text-xs text-slate-600 leading-relaxed max-h-48 overflow-y-auto p-2.5 bg-slate-50 rounded-xl border">${p.description || 'لا يوجد وصف تفصيلي.'}</div>
                         </div>
-                        <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition">شراء المنتج الآن ⚡</button>
+                        <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition">${t.buy_now_btn}</button>
                     </div>
                 </div>
             `;
@@ -493,7 +625,6 @@
             } catch(e) { alert('❌ حدث خطأ'); }
         }
 
-        // توليد إعلان بالذكاء الاصطناعي
         function generateAiAd(id) {
             const p = products.find(prod => prod.id === id);
             if(!p) return;
@@ -517,7 +648,6 @@
 
         function closeAiModal() { document.getElementById('ai-modal').classList.add('hidden'); }
 
-        // إضافة وتعديل منتج
         async function handleProductSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('p-id').value;
@@ -592,20 +722,20 @@
             document.getElementById('cancel-edit-btn').classList.add('hidden');
         }
 
-        // نافذة الشراء الشفافة والطلبات
         function openModal(id) {
             currentProduct = products.find(p => p.id === id);
             if(!currentProduct) return;
             
+            const t = translations[currentLang];
             const prodPrice = parseFloat(currentProduct.price);
-            document.getElementById('modal-prod-price').innerText = `${prodPrice.toFixed(2)} د.ج`;
+            document.getElementById('modal-prod-price').innerText = `${prodPrice.toFixed(2)} ${t.currency}`;
             
             document.getElementById('modal-product-details').innerHTML = `
                 <div class="flex items-center gap-2.5 mb-1">
                     <img src="${currentProduct.image_url}" class="w-12 h-12 object-contain border bg-slate-50 rounded-lg">
                     <div>
                         <h2 class="text-xs font-bold text-slate-800 line-clamp-1">${currentProduct.name}</h2>
-                        <span class="text-xs text-[#FF5000] font-black">${parseFloat(currentProduct.price).toFixed(2)} د.ج</span>
+                        <span class="text-xs text-[#FF5000] font-black">${parseFloat(currentProduct.price).toFixed(2)} ${t.currency}</span>
                     </div>
                 </div>
             `;
@@ -615,6 +745,7 @@
 
         function updateShippingPrices() {
             if(!currentProduct) return;
+            const t = translations[currentLang];
             const wilaya = document.getElementById('cust-wilaya').value;
             const rates = dbShippingRates[wilaya] || defaultRates;
             const shipTypeSelect = document.querySelector('input[name="modal_ship"]:checked');
@@ -624,8 +755,8 @@
             const shipFee = shipType === 'home' ? parseFloat(rates.home) : parseFloat(rates.desk);
             const total = prodPrice + shipFee;
 
-            document.getElementById('modal-ship-price').innerText = `${shipFee.toFixed(2)} د.ج`;
-            document.getElementById('modal-total-price').innerText = `${total.toFixed(2)} د.ج`;
+            document.getElementById('modal-ship-price').innerText = `${shipFee.toFixed(2)} ${t.currency}`;
+            document.getElementById('modal-total-price').innerText = `${total.toFixed(2)} ${t.currency}`;
         }
 
         async function handleOrderSubmit(e) {
