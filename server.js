@@ -174,26 +174,23 @@ app.post('/api/orders/:id/archive', async (req, res) => {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        const formData = new URLSearchParams({
-            customerName: order.customer_name || '',
-            phone: order.phone || '',
-            wilaya: order.wilaya || '',
-            commune: order.baladia || '',
-            totalPrice: order.total_price || 0,
-            productName: order.product_name || ''
-        });
+        const params = new URLSearchParams();
+        params.append('customerName', order.customer_name || '');
+        params.append('phone', order.phone || '');
+        params.append('wilaya', order.wilaya || '');
+        params.append('commune', order.baladia || '');
+        params.append('totalPrice', order.total_price || 0);
+        params.append('productName', order.product_name || '');
 
-        // إرسال البيانات
+        // إرسال الطلب عبر POST المباشر
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            redirect: 'follow',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString()
+            body: params
         });
 
-        // حذف الطلب من قاعدة البيانات بعد نجاح الأرشفة
+        // حذف الطلب من قاعدة البيانات بعد الأرشفة
         await Order.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'تم أرشفة الطلب بنجاح ووضعه في Google Sheets!' });
+        res.json({ success: true, message: 'تم أرشفة الطلب بنجاح ونقله إلى Google Sheets!' });
     } catch (err) {
         console.error('خطأ الأرشفة:', err);
         res.status(500).json({ success: false, error: err.message });
