@@ -18,7 +18,7 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ تم الاتصال بقاعدة البيانات بنجاح'))
     .catch(err => console.error('❌ خطأ قاعدة البيانات:', err.message));
 
-// إعداد التخزين المحلي السريع للصور
+// إعداد التخزين المحلي للصور
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
@@ -34,6 +34,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
     badge: String,
     description: String,
     image_url: String,
+    is_featured: { type: Boolean, default: false },
     created_at: { type: Date, default: Date.now }
 }));
 
@@ -58,7 +59,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // 1. جلب المنتجات
 app.get('/api/products', async (req, res) => {
     try {
-        const products = await Product.find().sort({ created_at: -1 });
+        const products = await Product.find().sort({ is_featured: -1, created_at: -1 });
         res.json(products.map(p => ({
             id: p._id.toString(),
             name: p.name,
@@ -67,7 +68,8 @@ app.get('/api/products', async (req, res) => {
             old_price: p.old_price,
             badge: p.badge,
             description: p.description,
-            image_url: p.image_url || 'https://via.placeholder.com/300'
+            image_url: p.image_url || 'https://via.placeholder.com/300',
+            is_featured: p.is_featured || false
         })));
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -75,14 +77,19 @@ app.get('/api/products', async (req, res) => {
 // 2. إضافة منتج
 app.post('/api/admin/products', upload.single('image_file'), async (req, res) => {
     try {
-        const { name, category, price, old_price, badge, description } = req.body;
+        const { name, category, price, old_price, badge, description, is_featured } = req.body;
         let image_url = req.file ? `/uploads/${req.file.filename}` : 'https://via.placeholder.com/300';
+
+        if (is_featured === 'true' || is_featured === true) {
+            await Product.updateMany({}, { is_featured: false });
+        }
 
         const newProd = new Product({
             name, category,
             price: parseFloat(price),
             old_price: parseFloat(old_price || 0),
-            badge, description, image_url
+            badge, description, image_url,
+            is_featured: is_featured === 'true' || is_featured === true
         });
 
         await newProd.save();
@@ -93,12 +100,18 @@ app.post('/api/admin/products', upload.single('image_file'), async (req, res) =>
 // 3. تعديل منتج
 app.put('/api/admin/products/:id', upload.single('image_file'), async (req, res) => {
     try {
-        const { name, category, price, old_price, badge, description } = req.body;
+        const { name, category, price, old_price, badge, description, is_featured } = req.body;
+        
+        if (is_featured === 'true' || is_featured === true) {
+            await Product.updateMany({}, { is_featured: false });
+        }
+
         const updateData = {
             name, category,
             price: parseFloat(price),
             old_price: parseFloat(old_price || 0),
-            badge, description
+            badge, description,
+            is_featured: is_featured === 'true' || is_featured === true
         };
         if (req.file) updateData.image_url = `/uploads/${req.file.filename}`;
 
@@ -107,7 +120,16 @@ app.put('/api/admin/products/:id', upload.single('image_file'), async (req, res)
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 4. حذف منتج
+// 4. جعل المنتج هو المستهدف الرئيسي في الأشهار
+app.post('/api/admin/products/:id/feature', async (req, res) => {
+    try {
+        await Product.updateMany({}, { is_featured: false });
+        const featuredProd = await Product.findByIdAndUpdate(req.params.id, { is_featured: true }, { new: true });
+        res.json({ success: true, product: featuredProd });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// 5. حذف منتج
 app.delete('/api/admin/products/:id', async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
@@ -115,7 +137,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 5. جلب الطلبات
+// 6. جلب الطلبات
 app.get('/api/orders', async (req, res) => {
     try {
         const orders = await Order.find().sort({ created_at: -1 });
@@ -133,7 +155,7 @@ app.get('/api/orders', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 6. إضافة طلب جديد
+// 7. إضافة طلب جديد
 app.post('/api/orders', async (req, res) => {
     try {
         const newOrder = new Order(req.body);
@@ -142,7 +164,7 @@ app.post('/api/orders', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 7. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات
+// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات (معالجة سريعة وبدون أخطاء CORS)
 app.post('/api/orders/:id/archive', async (req, res) => {
     try {
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo3uCYHT1kDKvhBgi2NVmhAAYsrv6zNBSWsOrKHc-lq6FrV3obyN4xE37gsYMPTX8/exec";
@@ -152,24 +174,27 @@ app.post('/api/orders/:id/archive', async (req, res) => {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        // إرسال البيانات مباشرة باستخدام fetch المدمجة في Node.js
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                customerName: order.customer_name || '',
-                phone: order.phone || '',
-                wilaya: order.wilaya || '',
-                commune: order.baladia || '',
-                productName: order.product_name || '',
-                totalPrice: order.total_price || 0,
-                shippingType: order.shipping_type === 'home' ? 'منزل' : 'مكتب'
-            })
+        const payload = new URLSearchParams({
+            customerName: order.customer_name || '',
+            phone: order.phone || '',
+            wilaya: order.wilaya || '',
+            commune: order.baladia || '',
+            productName: order.product_name || '',
+            totalPrice: order.total_price || 0,
+            shippingType: order.shipping_type === 'home' ? 'منزل' : 'مكتب'
         });
 
-        // حذف الطلب من قاعدة البيانات بعد الأرشفة
+        // إرسال البيانات لـ Apps Script
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: payload.toString()
+        });
+
+        // حذف الطلب من قاعدة البيانات بعد التصدير
         await Order.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'تم نقل الطلب لأرشيف Google Sheets وحذفه من المتجر بنجاح!' });
+        res.json({ success: true, message: 'تم أرشفة الطلب بنجاح إلى Google Sheets وحذفه من المتجر!' });
     } catch (err) {
         console.error('خطأ الأرشفة:', err);
         res.status(500).json({ success: false, error: err.message });
