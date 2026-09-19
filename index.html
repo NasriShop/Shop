@@ -11,6 +11,10 @@
         .temu-btn { background-color: #FF5000; transition: transform 0.1s ease, background-color 0.2s; }
         .temu-btn:hover { background-color: #e04400; }
         .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        /* تأثير الزوم التفاعلي للصور */
+        .img-zoom-container { overflow: hidden; position: relative; }
+        .img-zoom { transition: transform 0.4s ease-in-out; }
+        .img-zoom-container:hover .img-zoom { transform: scale(1.35); }
     </style>
 </head>
 <body class="pb-12 text-gray-800">
@@ -85,11 +89,15 @@
                             <input type="file" id="p-file" accept="image/*" class="w-full p-1 border rounded-lg text-xs bg-gray-50">
                         </div>
                         <input type="text" id="p-badge" placeholder="الشارة (مثل: الأكثر مبيعاً)" class="w-full p-2 border rounded-lg text-sm">
-                        <textarea id="p-html-desc" rows="3" placeholder="الوصف الكامل للمنتج" class="w-full p-2 border rounded-lg text-sm"></textarea>
+                        
+                        <div>
+                            <label class="block text-[11px] text-gray-600 font-bold mb-1">وصف المنتج (يدعم اكواد HTML لتنسيق النصوص والألوان):</label>
+                            <textarea id="p-html-desc" rows="4" placeholder="يمكنك إدخال نص عادي أو كود HTML لتنسيق الصفحة..." class="w-full p-2 border rounded-lg text-sm font-mono text-xs bg-gray-50"></textarea>
+                        </div>
                         
                         <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-200">
                             <input type="checkbox" id="p-featured" class="w-4 h-4 text-[#FF5000] accent-[#FF5000]">
-                            <label for="p-[#FF5000]" class="text-xs font-bold text-amber-800">🌟 جعل هذا المنتج مستهدفاً في البانر الإشهاري</label>
+                            <label for="p-featured" class="text-xs font-bold text-amber-800">🌟 جعل هذا المنتج مستهدفاً في البانر الإشهاري</label>
                         </div>
 
                         <div class="flex gap-2">
@@ -192,11 +200,13 @@
         </div>
     </div>
 
-    <!-- نافذة الشراء الشفافة (Modal) -->
+    <!-- نافذة الشراء الشفافة (Modal) مع تكبير الصورة والوصف التفاعلي -->
     <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
             <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-500 text-xl font-bold">&times;</button>
+            
             <div id="modal-product-details" class="mb-4 border-b pb-4"></div>
+            
             <h3 class="text-md font-bold text-[#FF5000] mb-3"><i class="fa-solid fa-truck-fast"></i> استمارة الطلب (الدفع عند الاستلام)</h3>
             <form onsubmit="handleOrderSubmit(event)" class="space-y-3">
                 <input type="text" id="cust-name" required placeholder="الاسم الكامل" class="w-full p-2.5 border rounded-lg text-sm">
@@ -346,14 +356,16 @@
                     <div class="flex-1 space-y-2">
                         <span class="bg-yellow-400 text-black text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">🔥 المنتج الأكثر طلباً - عرض مميز</span>
                         <h2 class="text-2xl md:text-3xl font-black">${featuredProd.name}</h2>
-                        <p class="text-xs md:text-sm text-orange-100 line-clamp-2">${featuredProd.description || 'احصل عليه الآن بأفضل سعر مع توصيل سريع والدفع عند الاستلام!'}</p>
+                        <div class="text-xs md:text-sm text-orange-100 line-clamp-2">${featuredProd.description || 'احصل عليه الآن بأفضل سعر مع توصيل سريع والدفع عند الاستلام!'}</div>
                         <div class="pt-2 flex items-center gap-3">
                             <span class="text-2xl font-black text-yellow-300">${parseFloat(featuredProd.price)} د.ج</span>
                             ${featuredProd.old_price ? `<span class="text-sm line-through opacity-75">${parseFloat(featuredProd.old_price)} د.ج</span>` : ''}
                         </div>
                     </div>
                     <div class="flex flex-col items-center gap-3">
-                        <img src="${featuredProd.image_url}" class="w-32 h-32 md:w-40 md:h-40 object-contain bg-white rounded-xl p-2 shadow-lg">
+                        <div class="img-zoom-container rounded-xl">
+                            <img src="${featuredProd.image_url}" class="img-zoom w-32 h-32 md:w-40 md:h-40 object-contain bg-white rounded-xl p-2 shadow-lg">
+                        </div>
                         <button onclick="openModal('${featuredProd.id}')" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-6 py-2.5 rounded-xl text-sm shadow-lg w-full transition">طلب هذا المنتج فوراً ⚡</button>
                     </div>
                 `;
@@ -371,8 +383,8 @@
                     <div class="bg-white rounded-xl overflow-hidden card-shadow flex flex-col justify-between hover:shadow-lg transition h-full relative ${p.is_featured ? 'ring-2 ring-[#FF5000]' : ''}">
                         ${p.is_featured ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded">🌟 مميز</span>' : ''}
                         <div>
-                            <div class="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden p-2">
-                                <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-contain rounded-lg">
+                            <div class="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden p-2 img-zoom-container">
+                                <img src="${p.image_url}" alt="${p.name}" class="img-zoom w-full h-full object-contain rounded-lg">
                                 <span class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">${p.badge || 'تخفيض'}</span>
                             </div>
                             <div class="p-3">
@@ -439,7 +451,7 @@
             if(!p) return;
 
             const aiText = `🔥 عرض خاص ومحدود جداً على ${p.name}! 🔥\n\n` +
-            `✨ المميزات: ${p.description || 'جودة ممتازة واستخدام سهل ومريح'}\n` +
+            `✨ التفاصيل والمميزات:\n${p.description || 'جودة ممتازة واستخدام سهل ومريح'}\n\n` +
             `💰 السعر السابق: ${p.old_price ? p.old_price + ' د.ج' : (parseFloat(p.price) + 1000) + ' د.ج'}\n` +
             `🎉 السعر الحالي: ${p.price} د.ج فقط!\n\n` +
             `🚚 التوصيل سريع متوفر لـ 58 ولاية لغاية باب المنزل أو المكتب.\n` +
@@ -453,7 +465,7 @@
         function copyAiAd() {
             const text = document.getElementById('ai-output').innerText;
             navigator.clipboard.writeText(text);
-            alert('📋 تم نسخ النص الإعلاني بنجاح! يمكنك استخدامه في الفيسبوك أو انستغرام.');
+            alert('📋 تم نسخ النص الإعلاني بنجاح!');
         }
 
         function closeAiModal() { document.getElementById('ai-modal').classList.add('hidden'); }
@@ -540,9 +552,18 @@
             
             const prodPrice = parseFloat(currentProduct.price);
             document.getElementById('modal-prod-price').innerText = `${prodPrice.toFixed(2)} د.ج`;
+            
+            // دعم تكبير الصورة وعرض كود HTML المخصص في الوصف
             document.getElementById('modal-product-details').innerHTML = `
-                <h2 class="text-lg font-bold text-gray-900 mb-1">${currentProduct.name}</h2>
-                <div class="text-xs text-gray-600">${currentProduct.description || ''}</div>
+                <div class="flex flex-col md:flex-row gap-4 items-center mb-3">
+                    <div class="w-32 h-32 flex-shrink-0 img-zoom-container rounded-lg border bg-gray-50">
+                        <img src="${currentProduct.image_url}" class="img-zoom w-full h-full object-contain p-1 rounded-lg">
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900 mb-1">${currentProduct.name}</h2>
+                        <div class="text-xs text-gray-700 leading-relaxed bg-gray-50 p-2 rounded border max-h-32 overflow-y-auto">${currentProduct.description || 'لا يوجد وصف مخصص'}</div>
+                    </div>
+                </div>
             `;
             updateShippingPrices();
             document.getElementById('checkout-modal').classList.remove('hidden');
