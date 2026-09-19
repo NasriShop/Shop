@@ -23,6 +23,33 @@
         .img-zoom-container:hover .zoom-badge { opacity: 1; }
         .img-zoom { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .img-zoom-container:hover .img-zoom { transform: scale(1.15); }
+
+        /* تنسيقات حصرية ومحتترفة لصفحة الهبوط Landing Page داخل النافذة */
+        .landing-content img {
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 12px;
+            margin: 12px auto;
+            display: block;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .landing-content h1, .landing-content h2, .landing-content h3 {
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        .landing-content p {
+            margin-bottom: 10px;
+            line-height: 1.7;
+            color: #334155;
+        }
+        .landing-content ul {
+            list-style-type: disc;
+            padding-right: 20px;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body class="pb-20 text-slate-800 antialiased">
@@ -189,10 +216,10 @@
         </div>
     </div>
 
-    <!-- نافذة تفاصيل المنتج المخصصة -->
-    <div id="details-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3">
-        <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 relative card-shadow">
-            <button onclick="closeDetailsModal()" class="absolute top-3 left-3 text-slate-400 text-xl font-bold hover:text-red-600 transition">&times;</button>
+    <!-- نافذة تفاصيل المنتج المخصصة الكبيرة المصممة كـ Landing Page متكاملة -->
+    <div id="details-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 relative card-shadow">
+            <button onclick="closeDetailsModal()" class="absolute top-3 left-3 z-20 text-slate-400 text-2xl font-bold hover:text-red-600 transition bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
             <div id="details-modal-content"></div>
         </div>
     </div>
@@ -327,7 +354,7 @@
                 currency: "د.ج"
             },
             fr: {
-                top_announcement: "🔥 Livraison rapide 58 Wilayas | Paiement à la إlivraison avec vérification 🤝",
+                top_announcement: "🔥 Livraison rapide 58 Wilayas | Paiement à la livraison avec vérification 🤝",
                 search_placeholder: "Rechercher un produit...",
                 admin_btn: "Admin",
                 all_products: "Tous les produits disponibles",
@@ -403,7 +430,6 @@
             renderProducts(products);
         }
 
-        // تحميل بيانات الجزائر الجغرافية
         async function loadAlgeriaData() {
             try {
                 const res = await fetch('https://raw.githubusercontent.com/othmanus/algeria-cities/master/json/algeria_cities.json');
@@ -554,6 +580,7 @@
             });
         }
 
+        // فتح نافذة تفاصيل المنتج المصممة كـ Landing Page متكاملة تحت الصورة مباشرة
         function openDetailsModal(id) {
             const p = products.find(prod => prod.id === id);
             if(!p) return;
@@ -561,20 +588,39 @@
             const t = translations[currentLang];
             const content = document.getElementById('details-modal-content');
             content.innerHTML = `
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div class="img-zoom-container rounded-2xl bg-slate-50 border p-3 flex items-center justify-center aspect-square">
-                        <img src="${p.image_url}" class="img-zoom w-full h-full object-contain">
-                        <span class="zoom-badge">🔍 Zoom: 200%</span>
-                    </div>
-                    <div class="flex flex-col justify-between space-y-3">
-                        <div>
-                            <span class="inline-block bg-orange-100 text-[#FF5000] text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">${p.badge || 'PROMO'}</span>
-                            <h2 class="text-base font-black text-slate-800 mb-1">${p.name}</h2>
-                            <div class="text-lg font-black text-[#FF5000] mb-2">${parseFloat(p.price)} ${t.currency} ${p.old_price ? `<span class="text-xs text-slate-400 line-through mr-1">${parseFloat(p.old_price)}${t.currency}</span>` : ''}</div>
-                            <hr class="mb-3">
-                            <div class="text-xs text-slate-600 leading-relaxed max-h-48 overflow-y-auto p-2.5 bg-slate-50 rounded-xl border">${p.description || 'لا يوجد وصف تفصيلي.'}</div>
+                <div class="flex flex-col space-y-4">
+                    <!-- 1. الشارة والعنوان والسعر -->
+                    <div class="text-center border-b pb-3">
+                        <span class="inline-block bg-orange-100 text-[#FF5000] text-[10px] font-extrabold px-3 py-0.5 rounded-full mb-1">
+                            ${p.badge || 'عرض خاص'}
+                        </span>
+                        <h2 class="text-lg sm:text-2xl font-black text-slate-800">${p.name}</h2>
+                        <div class="flex items-center justify-center gap-2 mt-1">
+                            <span class="text-xl sm:text-2xl font-black text-[#FF5000]">${parseFloat(p.price)} ${t.currency}</span>
+                            ${p.old_price ? `<span class="text-xs sm:text-sm text-slate-400 line-through">${parseFloat(p.old_price)}${t.currency}</span>` : ''}
                         </div>
-                        <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition">${t.buy_now_btn}</button>
+                    </div>
+
+                    <!-- 2. صورة المنتج الرئيسية -->
+                    <div class="w-full max-w-xs sm:max-w-sm mx-auto bg-slate-50 border rounded-2xl p-2 flex items-center justify-center overflow-hidden">
+                        <img src="${p.image_url}" alt="${p.name}" class="w-full h-auto max-h-64 object-contain rounded-xl">
+                    </div>
+
+                    <!-- 3. زر طلب مباشر بارز بعد الصورة -->
+                    <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-3 rounded-xl font-bold text-xs sm:text-sm shadow-md transition hover:scale-[1.01]">
+                        ${t.buy_now_btn}
+                    </button>
+
+                    <!-- 4. محتوى الوصف (Landing Page HTML) بدون Scrollbar داخلي وبحجم واضح -->
+                    <div class="landing-content pt-2 text-slate-700 text-xs sm:text-sm leading-relaxed">
+                        ${p.description || '<p class="text-center text-slate-400">لا يوجد وصف تفصيلي متوفر حالياً.</p>'}
+                    </div>
+
+                    <!-- 5. زر طلب سفلي إضافي لتحقيق أعلى نسبة تحويل (Conversion) -->
+                    <div class="pt-2 border-t">
+                        <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-3.5 rounded-xl font-extrabold text-sm shadow-lg">
+                            ${t.buy_now_btn}
+                        </button>
                     </div>
                 </div>
             `;
