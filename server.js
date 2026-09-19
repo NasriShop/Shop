@@ -164,7 +164,7 @@ app.post('/api/orders', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات
+// 8. أرشفة معلومات الأشخاص والمنتجات فقط (بدون صور)
 app.post('/api/orders/:id/archive', async (req, res) => {
     try {
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMkwXfTBfd_fkm_0mipWayNzEc68q0umdSTp2w3B-kHMy0Q3JLtyBqiuQLgpPvK2Y/exec";
@@ -174,23 +174,26 @@ app.post('/api/orders/:id/archive', async (req, res) => {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        const params = new URLSearchParams();
-        params.append('customerName', order.customer_name || '');
-        params.append('phone', order.phone || '');
-        params.append('wilaya', order.wilaya || '');
-        params.append('commune', order.baladia || '');
-        params.append('totalPrice', order.total_price || 0);
-        params.append('productName', order.product_name || '');
+        // إرسال البيانات النصية فقط
+        const payload = JSON.stringify({
+            customerName: order.customer_name || '',
+            phone: order.phone || '',
+            wilaya: order.wilaya || '',
+            commune: order.baladia || '',
+            totalPrice: order.total_price || 0,
+            productName: order.product_name || ''
+        });
 
-        // إرسال الطلب عبر POST المباشر
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            body: params
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: payload
         });
 
         // حذف الطلب من قاعدة البيانات بعد الأرشفة
         await Order.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'تم أرشفة الطلب بنجاح ونقله إلى Google Sheets!' });
+        res.json({ success: true, message: 'تم أرشفة معلومات الطلب بنجاح إلى Google Sheets!' });
     } catch (err) {
         console.error('خطأ الأرشفة:', err);
         res.status(500).json({ success: false, error: err.message });
