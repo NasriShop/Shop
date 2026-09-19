@@ -11,10 +11,18 @@
         .temu-btn { background-color: #FF5000; transition: transform 0.1s ease, background-color 0.2s; }
         .temu-btn:hover { background-color: #e04400; }
         .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        /* تأثير الزوم التفاعلي للصور */
+        
+        /* تأثير الزوم التفاعلي مع إظهار نسبة التكبير */
         .img-zoom-container { overflow: hidden; position: relative; }
+        .img-zoom-container .zoom-badge {
+            position: absolute; bottom: 6px; right: 6px; z-index: 10;
+            background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 10px; font-weight: bold;
+            padding: 2px 6px; rounded-radius: 6px; border-radius: 4px; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .img-zoom-container:hover .zoom-badge { opacity: 1; }
         .img-zoom { transition: transform 0.4s ease-in-out; }
-        .img-zoom-container:hover .img-zoom { transform: scale(1.35); }
+        .img-zoom-container:hover .img-zoom { transform: scale(1.5); }
     </style>
 </head>
 <body class="pb-12 text-gray-800">
@@ -44,9 +52,8 @@
     <!-- واجهة المتجر للزبائن -->
     <div id="store-view">
         <main class="container mx-auto px-4 mt-6">
-            <!-- بانر المنتج المستهدف للإشهار -->
-            <div id="featured-ad-banner" class="hidden mb-6 bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl text-white p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute -left-10 -bottom-10 opacity-20 text-9xl"><i class="fa-solid fa-bullhorn"></i></div>
+            <!-- بانر المنتج المستهدف للإشهار بتصميم خطوط متناسقة ومتحركة -->
+            <div id="featured-ad-banner" class="hidden mb-6 bg-gradient-to-r from-orange-600 via-red-600 to-orange-500 rounded-3xl text-white p-6 shadow-2xl relative overflow-hidden">
                 <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6" id="featured-ad-content"></div>
             </div>
 
@@ -91,8 +98,8 @@
                         <input type="text" id="p-badge" placeholder="الشارة (مثل: الأكثر مبيعاً)" class="w-full p-2 border rounded-lg text-sm">
                         
                         <div>
-                            <label class="block text-[11px] text-gray-600 font-bold mb-1">وصف المنتج (يدعم اكواد HTML لتنسيق النصوص والألوان):</label>
-                            <textarea id="p-html-desc" rows="4" placeholder="يمكنك إدخال نص عادي أو كود HTML لتنسيق الصفحة..." class="w-full p-2 border rounded-lg text-sm font-mono text-xs bg-gray-50"></textarea>
+                            <label class="block text-[11px] text-gray-600 font-bold mb-1">وصف المنتج (يدعم اكواد HTML للتصميم):</label>
+                            <textarea id="p-html-desc" rows="4" placeholder="يمكنك وضع نص عادي أو كود HTML مخصص..." class="w-full p-2 border rounded-lg text-sm font-mono text-xs bg-gray-50"></textarea>
                         </div>
                         
                         <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-200">
@@ -176,6 +183,14 @@
         </div>
     </div>
 
+    <!-- نافذة تفاصيل المنتج المخصصة الكبيرة -->
+    <div id="details-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative card-shadow">
+            <button onclick="closeDetailsModal()" class="absolute top-4 left-4 text-gray-500 text-2xl font-bold hover:text-red-600">&times;</button>
+            <div id="details-modal-content"></div>
+        </div>
+    </div>
+
     <!-- نافذة توليد الإعلان بالذكاء الاصطناعي -->
     <div id="ai-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 relative card-shadow space-y-4">
@@ -200,7 +215,7 @@
         </div>
     </div>
 
-    <!-- نافذة الشراء الشفافة (Modal) مع تكبير الصورة والوصف التفاعلي -->
+    <!-- نافذة الشراء الشفافة (Modal) -->
     <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
             <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-500 text-xl font-bold">&times;</button>
@@ -348,25 +363,28 @@
 
             grid.innerHTML = '';
             
-            // البحث عن المنتج الإشهاري المميز
+            // إصلاح تداخل العناوين بإنشاء كروت مرنة ممتازة
             const featuredProd = items.find(p => p.is_featured);
             if (featuredProd && adBanner && adContent) {
                 adBanner.classList.remove('hidden');
                 adContent.innerHTML = `
-                    <div class="flex-1 space-y-2">
-                        <span class="bg-yellow-400 text-black text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">🔥 المنتج الأكثر طلباً - عرض مميز</span>
-                        <h2 class="text-2xl md:text-3xl font-black">${featuredProd.name}</h2>
-                        <div class="text-xs md:text-sm text-orange-100 line-clamp-2">${featuredProd.description || 'احصل عليه الآن بأفضل سعر مع توصيل سريع والدفع عند الاستلام!'}</div>
-                        <div class="pt-2 flex items-center gap-3">
-                            <span class="text-2xl font-black text-yellow-300">${parseFloat(featuredProd.price)} د.ج</span>
-                            ${featuredProd.old_price ? `<span class="text-sm line-through opacity-75">${parseFloat(featuredProd.old_price)} د.ج</span>` : ''}
+                    <div class="flex-1 space-y-3 text-right">
+                        <span class="bg-yellow-400 text-black text-xs font-black px-3 py-1 rounded-full inline-block shadow">🔥 العرض الأكثر طلباً هذا الأسبوع</span>
+                        <h2 class="text-2xl md:text-4xl font-black leading-tight text-white">${featuredProd.name}</h2>
+                        <div class="pt-1 flex items-baseline gap-3">
+                            <span class="text-3xl font-black text-yellow-300">${parseFloat(featuredProd.price)} د.ج</span>
+                            ${featuredProd.old_price ? `<span class="text-base line-through text-orange-200">${parseFloat(featuredProd.old_price)} د.ج</span>` : ''}
                         </div>
                     </div>
-                    <div class="flex flex-col items-center gap-3">
-                        <div class="img-zoom-container rounded-xl">
-                            <img src="${featuredProd.image_url}" class="img-zoom w-32 h-32 md:w-40 md:h-40 object-contain bg-white rounded-xl p-2 shadow-lg">
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <div class="img-zoom-container rounded-2xl bg-white p-2 shadow-lg w-36 h-36 flex-shrink-0">
+                            <img src="${featuredProd.image_url}" class="img-zoom w-full h-full object-contain">
+                            <span class="zoom-badge">🔍 Zoom: 150%</span>
                         </div>
-                        <button onclick="openModal('${featuredProd.id}')" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-6 py-2.5 rounded-xl text-sm shadow-lg w-full transition">طلب هذا المنتج فوراً ⚡</button>
+                        <div class="flex flex-col gap-2 w-full sm:w-auto">
+                            <button onclick="openDetailsModal('${featuredProd.id}')" class="bg-white hover:bg-gray-100 text-gray-900 font-extrabold px-5 py-2.5 rounded-xl text-xs shadow transition w-full">👁️ رؤية تفاصيل المنتج</button>
+                            <button onclick="openModal('${featuredProd.id}')" class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-6 py-2.5 rounded-xl text-sm shadow-lg w-full transition">شراء الآن ⚡</button>
+                        </div>
                     </div>
                 `;
             } else if (adBanner) {
@@ -380,28 +398,59 @@
 
             items.forEach(p => {
                 grid.innerHTML += `
-                    <div class="bg-white rounded-xl overflow-hidden card-shadow flex flex-col justify-between hover:shadow-lg transition h-full relative ${p.is_featured ? 'ring-2 ring-[#FF5000]' : ''}">
-                        ${p.is_featured ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded">🌟 مميز</span>' : ''}
+                    <div class="bg-white rounded-2xl overflow-hidden card-shadow flex flex-col justify-between hover:shadow-xl transition-all duration-200 h-full relative border ${p.is_featured ? 'ring-2 ring-[#FF5000]' : ''}">
+                        ${p.is_featured ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow">🌟 مميز</span>' : ''}
                         <div>
-                            <div class="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden p-2 img-zoom-container">
+                            <div class="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden p-2 img-zoom-container cursor-pointer" onclick="openDetailsModal('${p.id}')">
                                 <img src="${p.image_url}" alt="${p.name}" class="img-zoom w-full h-full object-contain rounded-lg">
+                                <span class="zoom-badge">🔍 Zoom: 150%</span>
                                 <span class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">${p.badge || 'تخفيض'}</span>
                             </div>
                             <div class="p-3">
-                                <h4 class="text-xs md:text-sm font-medium line-clamp-2 text-gray-800">${p.name}</h4>
+                                <h4 class="text-xs md:text-sm font-bold line-clamp-2 text-gray-800 cursor-pointer hover:text-[#FF5000]" onclick="openDetailsModal('${p.id}')">${p.name}</h4>
                                 <div class="mt-2 flex items-baseline gap-1">
                                     <span class="text-base md:text-lg font-black text-[#FF5000]">${parseFloat(p.price)} <span class="text-xs">د.ج</span></span>
                                     ${p.old_price ? `<span class="text-xs text-gray-400 line-through">${parseFloat(p.old_price)}</span>` : ''}
                                 </div>
                             </div>
                         </div>
-                        <div class="p-3 pt-0">
+                        <div class="p-3 pt-0 space-y-1.5">
+                            <button type="button" onclick="openDetailsModal('${p.id}')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] py-1.5 rounded-lg font-bold transition">👁️ رؤية التفاصيل</button>
                             <button type="button" onclick="openModal('${p.id}')" class="w-full temu-btn text-white text-xs py-2 rounded-lg font-bold shadow">شراء الآن ⚡</button>
                         </div>
                     </div>
                 `;
             });
         }
+
+        // فتح نافذة تفاصيل المنتج المخصصة مع دعم HTML
+        function openDetailsModal(id) {
+            const p = products.find(prod => prod.id === id);
+            if(!p) return;
+
+            const content = document.getElementById('details-modal-content');
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="img-zoom-container rounded-2xl bg-gray-50 border p-4 flex items-center justify-center aspect-square">
+                        <img src="${p.image_url}" class="img-zoom w-full h-full object-contain">
+                        <span class="zoom-badge">🔍 Zoom: 200%</span>
+                    </div>
+                    <div class="flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="inline-block bg-orange-100 text-[#FF5000] text-xs font-bold px-2.5 py-1 rounded-full mb-2">${p.badge || 'عرض خاص'}</span>
+                            <h2 class="text-xl md:text-2xl font-black text-gray-900 mb-3">${p.name}</h2>
+                            <div class="text-2xl font-black text-[#FF5000] mb-4">${parseFloat(p.price)} د.ج ${p.old_price ? `<span class="text-sm text-gray-400 line-through mr-2">${parseFloat(p.old_price)} د.ج</span>` : ''}</div>
+                            <hr class="mb-4">
+                            <div class="text-xs md:text-sm text-gray-700 leading-relaxed max-h-60 overflow-y-auto p-3 bg-gray-50 rounded-xl border">${p.description || 'لا يوجد وصف تفصيلي.'}</div>
+                        </div>
+                        <button onclick="closeDetailsModal(); openModal('${p.id}')" class="w-full temu-btn text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.01] transition">شراء هذا المنتج الآن ⚡</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal() { document.getElementById('details-modal').classList.add('hidden'); }
 
         function renderAdminProductsList(items) {
             const container = document.getElementById('admin-products-list');
@@ -553,15 +602,12 @@
             const prodPrice = parseFloat(currentProduct.price);
             document.getElementById('modal-prod-price').innerText = `${prodPrice.toFixed(2)} د.ج`;
             
-            // دعم تكبير الصورة وعرض كود HTML المخصص في الوصف
             document.getElementById('modal-product-details').innerHTML = `
-                <div class="flex flex-col md:flex-row gap-4 items-center mb-3">
-                    <div class="w-32 h-32 flex-shrink-0 img-zoom-container rounded-lg border bg-gray-50">
-                        <img src="${currentProduct.image_url}" class="img-zoom w-full h-full object-contain p-1 rounded-lg">
-                    </div>
+                <div class="flex items-center gap-3 mb-2">
+                    <img src="${currentProduct.image_url}" class="w-16 h-16 object-contain border bg-gray-50 rounded-lg">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900 mb-1">${currentProduct.name}</h2>
-                        <div class="text-xs text-gray-700 leading-relaxed bg-gray-50 p-2 rounded border max-h-32 overflow-y-auto">${currentProduct.description || 'لا يوجد وصف مخصص'}</div>
+                        <h2 class="text-base font-bold text-gray-900 line-clamp-1">${currentProduct.name}</h2>
+                        <span class="text-xs text-[#FF5000] font-black">${parseFloat(currentProduct.price).toFixed(2)} د.ج</span>
                     </div>
                 </div>
             `;

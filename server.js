@@ -164,7 +164,7 @@ app.post('/api/orders', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات
+// 8. أرشفة الطلب إلى Google Sheets وحذفه من قاعدة البيانات (معالجة موثوقة للارسال والتوجيه)
 app.post('/api/orders/:id/archive', async (req, res) => {
     try {
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo3uCYHT1kDKvhBgi2NVmhAAYsrv6zNBSWsOrKHc-lq6FrV3obyN4xE37gsYMPTX8/exec";
@@ -174,19 +174,22 @@ app.post('/api/orders/:id/archive', async (req, res) => {
             return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        // إرسال البيانات كـ JSON متوافق مع كود Apps Script الخاص بك
+        const postData = JSON.stringify({
+            customerName: order.customer_name || '',
+            phone: order.phone || '',
+            wilaya: order.wilaya || '',
+            commune: order.baladia || '',
+            productName: order.product_name || '',
+            quantity: 1,
+            totalPrice: order.total_price || 0
+        });
+
+        // إرسال كـ POST مع تتبع التوجيهات من خوادم قوقل
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                customerName: order.customer_name || '',
-                phone: order.phone || '',
-                wilaya: order.wilaya || '',
-                commune: order.baladia || '',
-                productName: order.product_name || '',
-                quantity: 1,
-                totalPrice: order.total_price || 0
-            })
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: postData
         });
 
         // حذف الطلب من قاعدة البيانات بعد الأرشفة
